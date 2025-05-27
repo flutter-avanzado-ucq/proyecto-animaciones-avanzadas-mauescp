@@ -29,7 +29,7 @@ class Header extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: const [
               Text(
-                'Hola, Liliana 👋',
+                'Hola, Mau 👋',
                 style: TextStyle(color: Colors.white, fontSize: 18),
               ),
               Text(
