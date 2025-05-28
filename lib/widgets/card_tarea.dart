@@ -22,16 +22,16 @@ class TaskCard extends StatelessWidget {
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 400),
       opacity: isDone ? 0.6 : 1.0,
-      // Reduce la opacidad de la tarjeta cuando la tarea está marcada como completada
+
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 400),
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isDone
-              ? Colors.green.shade100
-              : const Color.fromARGB(255, 150, 133, 133),
-          // Cambia el color de fondo si la tarea está completada
+          color:
+              isDone
+                  ? const Color.fromARGB(255, 156, 107, 146) // Color MORADO cuando la tarea está completada 26 DE MAYO
+                  : const Color.fromARGB(255, 174, 110, 25), //  Color NARANJA cuando la tarea es nueva 26 DE MAYO
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -41,7 +41,6 @@ class TaskCard extends StatelessWidget {
             ),
           ],
         ),
-
         child: ListTile(
           leading: GestureDetector(
             onTap: onToggle,
@@ -49,12 +48,16 @@ class TaskCard extends StatelessWidget {
               animation: iconRotation,
               builder: (context, child) {
                 return Transform.rotate(
-                  angle: isDone ? iconRotation.value * pi : 0,
-                  // Rota el ícono cuando la tarea cambia a completada
-
+                  angle:
+                      isDone
+                          ? pi
+                          : 0, // Gira 180° cuando está completada 26 DE MAYO
                   child: Icon(
                     isDone ? Icons.check_circle : Icons.radio_button_unchecked,
-                    color: isDone ? Colors.green : Colors.grey,
+                    color:
+                        isDone
+                            ? const Color.fromARGB(255, 37, 223, 68)
+                            : const Color.fromARGB(255, 235, 158, 4),
                   ),
                 );
               },
@@ -67,7 +70,6 @@ class TaskCard extends StatelessWidget {
               color: isDone ? Colors.black54 : Colors.black87,
             ),
           ),
-          
           trailing: IconButton(
             icon: const Icon(Icons.delete, color: Colors.redAccent),
             onPressed: onDelete,

@@ -36,16 +36,16 @@ class _TaskScreenState extends State<TaskScreen>
     setState(() {
       _tasks.insert(0, {'title': task, 'done': false});
     });
-    // Ejecuta animación inversa del ícono después de añadir una nueva tarea
-    _iconController.reverse();
+    // Reversa la animación del ícono cuando se agrega una tarea
+    _iconController.reverse(); // Comentario agregado
   }
 
   void _toggleComplete(int index) {
     setState(() {
       _tasks[index]['done'] = !_tasks[index]['done'];
     });
-    // Ejecuta animación del ícono al cambiar el estado de completado de una tarea
-    _iconController.forward(from: 0);
+    // Inicia animación del ícono al marcar como completado
+    _iconController.forward(from: 0); // Comentario agregado
   }
 
   void _removeTask(int index) {
@@ -55,7 +55,7 @@ class _TaskScreenState extends State<TaskScreen>
   }
 
   void _showAddTaskSheet() {
-    // Ejecuta animación del ícono al abrir el formulario para agregar tareas
+    // Inicia animación al mostrar el modal
     _iconController.forward();
     showModalBottomSheet(
       context: context,
@@ -67,7 +67,6 @@ class _TaskScreenState extends State<TaskScreen>
     );
   }
 
- 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,7 +75,7 @@ class _TaskScreenState extends State<TaskScreen>
           children: [
             const Header(),
             Expanded(
-              // Usa AnimationLimiter para evitar que las animaciones se repitan al hacer scroll
+              // Previene que las animaciones se repitan al hacer scroll
               child: AnimationLimiter(
                 child: ListView.builder(
                   padding: const EdgeInsets.symmetric(vertical: 8),
@@ -89,12 +88,30 @@ class _TaskScreenState extends State<TaskScreen>
                       child: SlideAnimation(
                         verticalOffset: 50.0,
                         child: FadeInAnimation(
-                          child: TaskCard(
-                            title: task['title'],
-                            isDone: task['done'],
-                            onToggle: () => _toggleComplete(index),
-                            onDelete: () => _removeTask(index),
-                            iconRotation: _iconController,
+                          child: Dismissible(
+                            key: UniqueKey(), // Cambiado para garantizar claves únicas
+                            direction: DismissDirection.endToStart,
+                            onDismissed: (direction) {
+                              _removeTask(index); // Simplificado para eliminar inmediatamente
+                            },
+                            background: Container(
+                              color: const Color.fromARGB(255, 196, 40, 29),
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
+                              child: const Icon(
+                                Icons.delete,
+                                color: Colors.white,
+                              ),
+                            ),
+                            child: TaskCard(
+                              title: task['title'],
+                              isDone: task['done'],
+                              onToggle: () => _toggleComplete(index),
+                              onDelete: () => _removeTask(index),
+                              iconRotation: _iconController,
+                            ),
                           ),
                         ),
                       ),
@@ -106,12 +123,8 @@ class _TaskScreenState extends State<TaskScreen>
           ],
         ),
       ),
-
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddTaskSheet,
-        backgroundColor: const Color.fromARGB(255, 31, 20, 49),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        // Muestra un ícono animado que cambia entre “añadir” y “evento” según el progreso
         child: AnimatedIcon(
           icon: AnimatedIcons.add_event,
           progress: _iconController,
