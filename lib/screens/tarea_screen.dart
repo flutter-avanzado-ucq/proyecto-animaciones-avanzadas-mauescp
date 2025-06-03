@@ -1,9 +1,10 @@
-// tarea_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../widgets/card_tarea.dart';
 import '../widgets/header.dart';
 import '../widgets/add_task_sheet.dart';
+import 'package:provider/provider.dart';
+import 'package:tareas/provider_task/task_provider.dart';
 
 class TaskScreen extends StatefulWidget {
   const TaskScreen({super.key});
@@ -14,7 +15,6 @@ class TaskScreen extends StatefulWidget {
 
 class _TaskScreenState extends State<TaskScreen>
     with SingleTickerProviderStateMixin {
-  final List<Map<String, dynamic>> _tasks = [];
   late AnimationController _iconController;
 
   @override
@@ -22,7 +22,7 @@ class _TaskScreenState extends State<TaskScreen>
     super.initState();
     _iconController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 500),
     );
   }
 
@@ -32,73 +32,63 @@ class _TaskScreenState extends State<TaskScreen>
     super.dispose();
   }
 
-  void _addTask(String task) {
-    setState(() {
-      _tasks.insert(0, {'title': task, 'done': false});
-    });
-    // Reversa la animación del ícono cuando se agrega una tarea
-    _iconController.reverse(); // Comentario agregado
-  }
-
-  void _toggleComplete(int index) {
-    setState(() {
-      _tasks[index]['done'] = !_tasks[index]['done'];
-    });
-    // Inicia animación del ícono al marcar como completado
-    _iconController.forward(from: 0); // Comentario agregado
-  }
-
-  void _removeTask(int index) {
-    setState(() {
-      _tasks.removeAt(index);
-    });
-  }
-
   void _showAddTaskSheet() {
-    // Inicia animación al mostrar el modal
-    _iconController.forward();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => AddTaskSheet(onSubmit: _addTask),
+      builder:
+          (_) => AddTaskSheet(
+            onAddTask: (String title, DateTime? fecha) {
+              Provider.of<TaskProvider>(
+                context,
+                listen: false,
+              ).addTask(title, dueDate: fecha);
+            },
+          ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final taskProvider = context.watch<TaskProvider>();
+
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
             const Header(),
             Expanded(
-              // Previene que las animaciones se repitan al hacer scroll
               child: AnimationLimiter(
                 child: ListView.builder(
                   padding: const EdgeInsets.symmetric(vertical: 8),
-                  itemCount: _tasks.length,
+                  itemCount: taskProvider.tasks.length,
                   itemBuilder: (context, index) {
-                    final task = _tasks[index];
+                    final task = taskProvider.tasks[index];
                     return AnimationConfiguration.staggeredList(
                       position: index,
-                      duration: const Duration(milliseconds: 400),
+                      duration: const Duration(milliseconds: 500),
                       child: SlideAnimation(
-                        verticalOffset: 50.0,
+                        verticalOffset: 30.0,
                         child: FadeInAnimation(
                           child: Dismissible(
-                            key: UniqueKey(), // Cambiado para garantizar claves únicas
+                            key: ValueKey(task.title),
                             direction: DismissDirection.endToStart,
-                            onDismissed: (direction) {
-                              _removeTask(index); // Simplificado para eliminar inmediatamente
-                            },
+                            onDismissed: (_) => taskProvider.removeTask(index),
                             background: Container(
-                              color: const Color.fromARGB(255, 196, 40, 29),
                               alignment: Alignment.centerRight,
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 20,
+                              ),
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.red.shade300,
+                                borderRadius: BorderRadius.circular(16),
                               ),
                               child: const Icon(
                                 Icons.delete,
@@ -106,11 +96,18 @@ class _TaskScreenState extends State<TaskScreen>
                               ),
                             ),
                             child: TaskCard(
-                              title: task['title'],
-                              isDone: task['done'],
-                              onToggle: () => _toggleComplete(index),
-                              onDelete: () => _removeTask(index),
+                              key: ValueKey(task.title),
+                              title: task.title,
+                              isDone: task.done,
+                              onToggle: () {
+                                taskProvider.toggleTask(index);
+                                _iconController.forward(from: 0);
+                              },
+                              onDelete: () {
+                                taskProvider.removeTask(index);
+                              },
                               iconRotation: _iconController,
+                              vencimiento: task.dueDate,
                             ),
                           ),
                         ),
@@ -125,10 +122,7 @@ class _TaskScreenState extends State<TaskScreen>
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddTaskSheet,
-        child: AnimatedIcon(
-          icon: AnimatedIcons.add_event,
-          progress: _iconController,
-        ),
+        child: const Icon(Icons.add),
       ),
     );
   }

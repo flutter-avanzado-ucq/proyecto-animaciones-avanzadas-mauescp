@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class TaskCard extends StatelessWidget {
   final String title;
@@ -7,6 +8,7 @@ class TaskCard extends StatelessWidget {
   final VoidCallback onToggle;
   final VoidCallback onDelete;
   final Animation<double> iconRotation;
+  final DateTime? vencimiento;
 
   const TaskCard({
     super.key,
@@ -15,6 +17,7 @@ class TaskCard extends StatelessWidget {
     required this.onToggle,
     required this.onDelete,
     required this.iconRotation,
+    required this.vencimiento,
   });
 
   @override
@@ -22,7 +25,6 @@ class TaskCard extends StatelessWidget {
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 400),
       opacity: isDone ? 0.6 : 1.0,
-
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 400),
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -30,8 +32,8 @@ class TaskCard extends StatelessWidget {
         decoration: BoxDecoration(
           color:
               isDone
-                  ? const Color.fromARGB(255, 156, 107, 146) // Color MORADO cuando la tarea está completada 26 DE MAYO
-                  : const Color.fromARGB(255, 174, 110, 25), //  Color NARANJA cuando la tarea es nueva 26 DE MAYO
+                  ? const Color.fromARGB(255, 226, 130, 207)
+                  : Colors.orangeAccent,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -48,16 +50,13 @@ class TaskCard extends StatelessWidget {
               animation: iconRotation,
               builder: (context, child) {
                 return Transform.rotate(
-                  angle:
-                      isDone
-                          ? pi
-                          : 0, // Gira 180° cuando está completada 26 DE MAYO
+                  angle: isDone ? pi : 0,
                   child: Icon(
                     isDone ? Icons.check_circle : Icons.radio_button_unchecked,
                     color:
                         isDone
-                            ? const Color.fromARGB(255, 37, 223, 68)
-                            : const Color.fromARGB(255, 235, 158, 4),
+                            ? const Color.fromARGB(255, 37, 124, 223)
+                            : const Color.fromARGB(255, 97, 104, 58),
                   ),
                 );
               },
@@ -67,9 +66,21 @@ class TaskCard extends StatelessWidget {
             title,
             style: TextStyle(
               decoration: isDone ? TextDecoration.lineThrough : null,
+              fontSize: 18,
               color: isDone ? Colors.black54 : Colors.black87,
+              fontWeight: FontWeight.w500,
             ),
           ),
+          subtitle:
+              vencimiento != null
+                  ? Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      'Vence: ${DateFormat('dd/MM/yyyy').format(vencimiento!)}',
+                      style: TextStyle(color: Colors.black87, fontSize: 14),
+                    ),
+                  )
+                  : null,
           trailing: IconButton(
             icon: const Icon(Icons.delete, color: Colors.redAccent),
             onPressed: onDelete,
