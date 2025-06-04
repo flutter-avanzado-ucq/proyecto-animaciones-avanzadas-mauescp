@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../widgets/edit_task_sheet.dart';
 
 class TaskCard extends StatelessWidget {
   final String title;
@@ -8,7 +9,8 @@ class TaskCard extends StatelessWidget {
   final VoidCallback onToggle;
   final VoidCallback onDelete;
   final Animation<double> iconRotation;
-  final DateTime? vencimiento;
+  final DateTime? dueDate;
+  final int index;
 
   const TaskCard({
     super.key,
@@ -17,29 +19,27 @@ class TaskCard extends StatelessWidget {
     required this.onToggle,
     required this.onDelete,
     required this.iconRotation,
-    required this.vencimiento,
+    required this.index,
+    this.dueDate,
   });
 
   @override
   Widget build(BuildContext context) {
     return AnimatedOpacity(
-      duration: const Duration(milliseconds: 400),
-      opacity: isDone ? 0.6 : 1.0,
+      duration: const Duration(milliseconds: 500),
+      opacity: isDone ? 0.4 : 1.0,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 400),
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        padding: const EdgeInsets.all(12),
+        duration: const Duration(milliseconds: 500),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color:
-              isDone
-                  ? const Color.fromARGB(255, 226, 130, 207)
-                  : Colors.orangeAccent,
-          borderRadius: BorderRadius.circular(16),
+          color: isDone ? const Color(0xFFD0F0C0) : const Color(0xFFFFF8E1),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
@@ -50,40 +50,59 @@ class TaskCard extends StatelessWidget {
               animation: iconRotation,
               builder: (context, child) {
                 return Transform.rotate(
-                  angle: isDone ? pi : 0,
+                  angle: iconRotation.value * pi,
                   child: Icon(
-                    isDone ? Icons.check_circle : Icons.radio_button_unchecked,
-                    color:
-                        isDone
-                            ? const Color.fromARGB(255, 37, 124, 223)
-                            : const Color.fromARGB(255, 97, 104, 58),
+                    isDone ? Icons.refresh : Icons.radio_button_unchecked,
+                    color: isDone ? Colors.teal : Colors.grey,
+                    size: 30,
                   ),
                 );
               },
             ),
           ),
-          title: Text(
-            title,
-            style: TextStyle(
-              decoration: isDone ? TextDecoration.lineThrough : null,
-              fontSize: 18,
-              color: isDone ? Colors.black54 : Colors.black87,
-              fontWeight: FontWeight.w500,
-            ),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  decoration: isDone ? TextDecoration.lineThrough : null,
+                  fontSize: 18,
+                  color: isDone ? Colors.black45 : Colors.black87,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              if (dueDate != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    'Vence: ${DateFormat('dd/MM/yyyy').format(dueDate!)}',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ),
+            ],
           ),
-          subtitle:
-              vencimiento != null
-                  ? Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      'Vence: ${DateFormat('dd/MM/yyyy').format(vencimiento!)}',
-                      style: TextStyle(color: Colors.black87, fontSize: 14),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.edit, color: Colors.blue),
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                     ),
-                  )
-                  : null,
-          trailing: IconButton(
-            icon: const Icon(Icons.delete, color: Colors.redAccent),
-            onPressed: onDelete,
+                    builder: (_) => EditTaskSheet(index: index),
+                  );
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                onPressed: onDelete,
+              ),
+            ],
           ),
         ),
       ),

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class Task {
   String title;
   bool done;
-  DateTime? dueDate; // Agregar la fecha de vencimiento
+  DateTime? dueDate;
 
   Task({required this.title, this.done = false, this.dueDate});
 }
@@ -25,6 +25,13 @@ class TaskProvider with ChangeNotifier {
 
   void removeTask(int index) {
     _tasks.removeAt(index);
+    notifyListeners();
+  }
+
+  void updateTask(int index, String newTitle, {DateTime? newDate})
+  {
+    _tasks[index].title = newTitle;
+    _tasks[index].dueDate = newDate;
     notifyListeners();
   }
 }
