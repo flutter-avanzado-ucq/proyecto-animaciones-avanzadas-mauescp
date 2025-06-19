@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/notification_service.dart';
 
 class Task {
   String title;
@@ -14,7 +15,18 @@ class TaskProvider with ChangeNotifier {
   List<Task> get tasks => List.unmodifiable(_tasks);
 
   void addTask(String title, {DateTime? dueDate}) {
-    _tasks.insert(0, Task(title: title, dueDate: dueDate));
+    final task = Task(title: title, dueDate: dueDate);
+    _tasks.insert(0, task);
+
+    // Programar una notificación si la tarea tiene fecha de vencimiento
+    if (dueDate != null) {
+      NotificationService.scheduleNotification(
+        title: 'Recordatorio de tarea',
+        body: 'La tarea "$title" vence hoy.',
+        scheduledDate: dueDate,
+      );
+    }
+
     notifyListeners();
   }
 
@@ -28,10 +40,20 @@ class TaskProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void updateTask(int index, String newTitle, {DateTime? newDate})
-  {
-    _tasks[index].title = newTitle;
-    _tasks[index].dueDate = newDate;
+  void updateTask(int index, String newTitle, {DateTime? newDate}) {
+    final task = _tasks[index];
+    task.title = newTitle;
+    task.dueDate = newDate;
+
+    // Reprogramar la notificación si se cambia la fecha de vencimiento
+    if (newDate != null) {
+      NotificationService.scheduleNotification(
+        title: 'Actualización de tarea',
+        body: 'La tarea "$newTitle" vence hoy.',
+        scheduledDate: newDate,
+      );
+    }
+
     notifyListeners();
   }
 }

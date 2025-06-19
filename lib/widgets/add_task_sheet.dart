@@ -1,34 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tareas/provider_task/task_provider.dart';
+import '../provider_task/task_provider.dart';
+import '../services/notification_service.dart';
 
 class AddTaskSheet extends StatefulWidget {
-  const AddTaskSheet({super.key, required this.onAddTask});
-
-  final void Function(String title, DateTime? fecha) onAddTask;
+  const AddTaskSheet({super.key, required Null Function(dynamic title, dynamic fecha) onAddTask});
 
   @override
   State<AddTaskSheet> createState() => _AddTaskSheetState();
 }
 
 class _AddTaskSheetState extends State<AddTaskSheet> {
-  final _controller = TextEditingController();
-  DateTime? _selectFecha;
+  final _controller = TextEditingController(); // Controla el input del usuario.
+  DateTime? _selectedDate; // Fecha seleccionada para vencimiento.
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller.dispose(); // Libera recursos del controlador de texto.
     super.dispose();
   }
 
-  void _submit() {
-    final text = _controller.text.trim();
+  void _submit() async {
+    final text = _controller.text.trim(); // Elimina espacios en blanco.
     if (text.isNotEmpty) {
-      Provider.of<TaskProvider>(
-        context,
-        listen: false,
-      ).addTask(text, dueDate: _selectFecha);
-      Navigator.pop(context);
+      // 1. Agrega la tarea al proveedor de estado.
+      Provider.of<TaskProvider>(context, listen: false).addTask(
+        text,
+        dueDate: _selectedDate,
+      );
+
+      // 2. Envia una notificación inmediata informando que se agregó la tarea.
+      await NotificationService.showImmediateNotification(
+        title: 'Nueva tarea',
+        body: 'Has agregado la tarea: $text',
+        payload: 'Tarea: $text', // Este texto será accesible si se toca la notificación.
+      );
+
+      // 3. Si el usuario seleccionó una fecha, programa una notificación futura.
+      if (_selectedDate != null) {
+        await NotificationService.scheduleNotification(
+          title: 'Recordatorio de tarea',
+          body: 'No olvides: $text',
+          scheduledDate: _selectedDate!,
+          payload: 'Tarea programada: $text para ${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+        );
+      }
+
+      Navigator.pop(context); // Cierra la hoja inferior.
     }
   }
 
@@ -36,13 +54,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
-      initialDate: _selectFecha ?? now,
+      initialDate: now,
       firstDate: now,
       lastDate: DateTime(now.year + 5),
     );
     if (picked != null) {
       setState(() {
-        _selectFecha = picked;
+        _selectedDate = picked; // Guarda la fecha seleccionada.
       });
     }
   }
@@ -59,10 +77,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'Agregar nueva tarea',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
+          const Text('Agregar nueva tarea', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           TextField(
             controller: _controller,
@@ -76,18 +91,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(
-                child: Text(
-                  _selectFecha == null
-                      ? 'Sin fecha de vencimiento'
-                      : 'Vence: ${_selectFecha!.day}/${_selectFecha!.month}/${_selectFecha!.year}',
-                ),
-              ),
-              TextButton.icon(
+              ElevatedButton(
                 onPressed: _pickDate,
-                icon: const Icon(Icons.calendar_today),
-                label: const Text('Eliga la fecha'),
+                child: const Text('Seleccionar fecha'),
               ),
+              const SizedBox(width: 10),
+              if (_selectedDate != null)
+                Text('${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}')
             ],
           ),
           const SizedBox(height: 12),
